@@ -1,5 +1,6 @@
 package com.Nexora.NexoraFinance.auth_users.entity;
 
+import com.Nexora.NexoraFinance.account.entity.Account;
 import com.Nexora.NexoraFinance.role.entity.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
