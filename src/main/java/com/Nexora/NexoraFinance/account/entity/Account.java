@@ -4,6 +4,7 @@ import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.enums.AccountStatus;
 import com.Nexora.NexoraFinance.enums.AccountType;
 import com.Nexora.NexoraFinance.enums.Currency;
+import com.Nexora.NexoraFinance.transaction.entity.Transaction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
