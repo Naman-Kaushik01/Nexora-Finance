@@ -11,7 +11,8 @@ import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
-
+@Entity
+@Table(name = "notifications")
 @Data
 @Builder
 @AllArgsConstructor
