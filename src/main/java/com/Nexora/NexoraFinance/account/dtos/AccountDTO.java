@@ -5,6 +5,7 @@ import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.enums.AccountStatus;
 import com.Nexora.NexoraFinance.enums.AccountType;
 import com.Nexora.NexoraFinance.enums.Currency;
+import com.Nexora.NexoraFinance.transaction.dtos.TransactionDTO;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
