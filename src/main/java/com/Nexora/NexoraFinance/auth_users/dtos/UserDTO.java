@@ -1,5 +1,6 @@
 package com.Nexora.NexoraFinance.auth_users.dtos;
 
+import com.Nexora.NexoraFinance.account.dtos.AccountDTO;
 import com.Nexora.NexoraFinance.role.entity.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -46,7 +47,7 @@ public class UserDTO {
 
     private List<Role> roles ;
 
-    @JsonManagedReference
+    @JsonManagedReference // it helps avoid recursion log by ignoring the userDTO within the AccountDTO
     private List<AccountDTO> accounts;
 
     private LocalDateTime createdAt;
