@@ -49,6 +49,7 @@ public class Account {
     @OneToMany(mappedBy = "account" , cascade = CascadeType.ALL , orphanRemoval = true , fetch = FetchType.LAZY)
     private List<Transaction> transactions;
 
+    private LocalDateTime closedAt;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt;
 }
