@@ -19,13 +19,40 @@ public class GlobalExceptionHandler {
 
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Response<?>> handleAllUnknownExceptions(NotFoundException ex) {
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Response<?>> handleInsufficientBalanceException(InsufficientBalanceException ex) {
         Response<?> response = Response.builder()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .message(ex.getMessage())
                 .build();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Response<?>> handleNotFoundException(NotFoundException ex) {
+        Response<?> response = Response.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidTransactionException.class)
+    public ResponseEntity<Response<?>> handleInvalidTransaction(InvalidTransactionException ex) {
+        Response<?> response = Response.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Response<?>> handleBadRequestException(BadRequestException ex) {
+        Response<?> response = Response.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
 }
