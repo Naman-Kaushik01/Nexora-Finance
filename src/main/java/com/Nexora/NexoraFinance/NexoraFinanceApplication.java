@@ -8,6 +8,7 @@ public class NexoraFinanceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(NexoraFinanceApplication.class, args);
+
 	}
 
 }

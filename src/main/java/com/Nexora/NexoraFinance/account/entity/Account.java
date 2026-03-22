@@ -28,7 +28,7 @@ public class Account {
     private Long id;
 
     @Column(unique = true, nullable = false , length = 15)
-    private String accountName;
+    private String accountNumber;
 
     @Column(nullable = false , precision =  19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
