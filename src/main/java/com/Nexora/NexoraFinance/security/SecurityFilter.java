@@ -1,10 +1,18 @@
 package com.Nexora.NexoraFinance.security;
 
+import com.Nexora.NexoraFinance.exceptions.CustomAcessDenialHandler;
 import com.Nexora.NexoraFinance.exceptions.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -12,6 +20,19 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @RequiredArgsConstructor
 public class SecurityFilter {
     private final AuthFilter authFilter;
-    private final  CustomAccessDenialHandler accessDenialHandler;
-    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAcessDenialHandler customAcessDenialHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .exceptionHandling(ex ->
+                        ex.accessDeniedHandler(customAcessDenialHandler).authenticationEntryPoint(customAuthenticationEntryPoint))
+                .authorizeHttpRequests(req -> req.requestMatchers("/api/auth/**").permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement(mag -> mag.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(authFilter , UsernamePasswordAuthenticationFilter.class);
+        return httpSecurity.build();
+    }
 }
