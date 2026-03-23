@@ -7,7 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -28,6 +35,35 @@ public class AuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String token = getTokenFromRequest(request);
+
+        if (token != null) {
+            String email;
+            try {
+
+                email = tokenService.getUsernameFromToken(token);
+
+            }catch (Exception ex){
+                log.error("Exception occured while extracting username from token");
+                AuthenticationException authenticationException = new BadCredentialsException(ex.getMessage());
+                customAuthenticationEntryPoint.commence(request, response, authenticationException);
+                return;
+            }
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
+
+            if(StringUtils.hasText(email) && tokenService.isTokenValid(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+        }
+        try {
+            filterChain.doFilter(request, response);
+        }catch (Exception ex){
+            log.error(ex.getMessage());
+        }
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
