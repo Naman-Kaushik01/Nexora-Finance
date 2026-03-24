@@ -1,7 +1,9 @@
 package com.Nexora.NexoraFinance.notification.services;
 
 import com.Nexora.NexoraFinance.auth_users.entity.User;
+import com.Nexora.NexoraFinance.enums.NotificationType;
 import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
+import com.Nexora.NexoraFinance.notification.entity.Notification;
 import com.Nexora.NexoraFinance.notification.repo.NotificationRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -39,17 +41,32 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setTo(notificationDTO.getRecipient());
             helper.setSubject(notificationDTO.getSubject());
 
+            //use template if provided
+
             if(notificationDTO.getTemplateName() != null) {
                 Context context = new Context();
                 context.setVariables(notificationDTO.getTemplateVariables());
                 String htmlContent = templateEngine.process(notificationDTO.getTemplateName(), context);
                 helper.setText(htmlContent, true);
             }else  {
+                //if no template send text body directly
                 helper.setText(notificationDTO.getBody(), true);
             }
 
-            //Save it to our database table
             mailSender.send(mimeMessage);
+
+            //Save it to our database table
+            Notification notificationToSave = Notification.builder()
+                            .recipient(notificationDTO.getRecipient())
+                            .subject(notificationDTO.getSubject())
+                            .body(notificationDTO.getBody())
+                            .type(NotificationType.EMAIL)
+                            .user(user)
+                            .build();
+
+            notificationRepo.save(notificationToSave);
+
+
 
         }catch (MessagingException e){
             log.error(e.getMessage());
