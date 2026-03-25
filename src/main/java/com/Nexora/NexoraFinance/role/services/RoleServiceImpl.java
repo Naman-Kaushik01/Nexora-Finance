@@ -46,12 +46,25 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Response<List<Role>> getAllRoles(Role role) {
-        return null;
+    public Response<List<Role>> getAllRoles() {
+        List<Role> roles = roleRepo.findAll();
+
+        return Response.<List<Role>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Roles retrieved successfully")
+                .data(roles).build();
     }
 
     @Override
     public Response<?> deleteRole(Long id) {
-        return null;
+       if(!roleRepo.existsById(id)){
+           throw new NotFoundException("Role not found");
+       }
+       roleRepo.deleteById(id);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Role deleted successfully")
+                .build();
     }
 }

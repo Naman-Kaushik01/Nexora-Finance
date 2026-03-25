@@ -10,7 +10,7 @@ public interface RoleService {
 
     Response<Role> updateRole(Role role);
 
-    Response<List<Role>> getAllRoles(Role role);
+    Response<List<Role>> getAllRoles();
 
     Response<?> deleteRole(Long id);
 
