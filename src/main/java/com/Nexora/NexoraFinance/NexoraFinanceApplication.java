@@ -25,7 +25,7 @@ public class NexoraFinanceApplication {
     //Testing mail sender
 
 //    private final NotificationService notificationService;
-
+//
 //    @Bean
 //    CommandLineRunner runner(){
 //        return args -> {
