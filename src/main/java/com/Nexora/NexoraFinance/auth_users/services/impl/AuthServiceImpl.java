@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
                     .toList();
         }
 
-        if(userRepo.findByEmail(request.getEmail()).isEmpty()){
+        if(userRepo.findByEmail(request.getEmail()).isPresent()){
             throw new BadRequestException("EMAIL ALREADY EXISTS");
         }
         User user = User.builder()
