@@ -9,8 +9,10 @@ import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.auth_users.repo.UserRepo;
 import com.Nexora.NexoraFinance.auth_users.services.AuthService;
 import com.Nexora.NexoraFinance.enums.AccountType;
+import com.Nexora.NexoraFinance.enums.Currency;
 import com.Nexora.NexoraFinance.exceptions.BadRequestException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
+import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import com.Nexora.NexoraFinance.res.Response;
 import com.Nexora.NexoraFinance.role.entity.Role;
@@ -18,11 +20,14 @@ import com.Nexora.NexoraFinance.role.repo.RoleRepo;
 import com.Nexora.NexoraFinance.security.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,7 +81,41 @@ public class AuthServiceImpl implements AuthService {
 
         Account savedAccount = accountService.createAccount(AccountType.SAVINGS,savedUser);
 
-        //TODO SEND A WELCOME EMAIL OF THE USER AND ACCOUNT DETAILS TO THE USERS EMAIL
+        //SEND A WELCOME EMAIL
+
+        Map<String,Object> vars = new HashMap<>();
+        vars.put("name" , savedUser.getFirstName());
+
+        NotificationDTO notificationDTO = NotificationDTO.builder()
+                .recipient(savedUser.getEmail())
+                .subject("Welcome to Nexora Finance 🎉 ")
+                .templateName("welcome")
+                .templateVariables(vars)
+                .build();
+
+        notificationService.sendEmail(notificationDTO , savedUser);
+
+        //SEND ACCOUNT CREATION / DETAILS EMAIL
+
+        Map<String,Object> accountVars = new HashMap<>();
+        accountVars.put("name" , savedUser.getFirstName());
+        accountVars.put("accountNumber" , savedAccount.getAccountNumber());
+        accountVars.put("accountType" ,AccountType.SAVINGS.name() );
+        accountVars.put("currency" , Currency.RUPEES);
+
+        NotificationDTO accountCreatedEmail = NotificationDTO.builder()
+                .recipient(savedUser.getEmail())
+                .subject("Your account has been created ✅")
+                .templateName("account-creaeted")
+                .templateVariables(accountVars)
+                .build();
+        notificationService.sendEmail(accountCreatedEmail , savedUser);
+
+        return Response.<String>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Your account has been created successfully")
+                .data("Email of your account details has been sent to you . Your account number is : "+ savedAccount.getAccountNumber())
+                .build();
 
     }
 
