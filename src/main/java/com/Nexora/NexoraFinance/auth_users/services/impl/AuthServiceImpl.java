@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -90,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
 
         //TODO AUTO GENERATE AN ACCOUNT NUMBER FOR THE USER
 
-        Account savedAccount = accountService.createAccount(AccountType.SAVINGS,savedUser);
+        //Account savedAccount = accountService.createAccount(AccountType.SAVINGS,savedUser);
 
         //SEND A WELCOME EMAIL
 
@@ -110,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
 
         Map<String,Object> accountVars = new HashMap<>();
         accountVars.put("name" , savedUser.getFirstName());
-        accountVars.put("accountNumber" , savedAccount.getAccountNumber());
+        //accountVars.put("accountNumber" , savedAccount.getAccountNumber());
         accountVars.put("accountType" ,AccountType.SAVINGS.name() );
         accountVars.put("currency" , Currency.RUPEES);
 
@@ -125,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
         return Response.<String>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Your account has been created successfully")
-                .data("Email of your account details has been sent to you . Your account number is : "+ savedAccount.getAccountNumber())
+               // .data("Email of your account details has been sent to you . Your account number is : "+ savedAccount.getAccountNumber())
                 .build();
 
     }
@@ -156,6 +157,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public Response<?> forgetPassword(String email) {
         User user = userRepo.findByEmail(email).orElseThrow(() -> new NotFoundException("USER NOT FOUND"));
         passwordResetCodeRepo.deleteByUserId(user.getId());
@@ -178,7 +180,7 @@ public class AuthServiceImpl implements AuthService {
 
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(user.getEmail())
-                .subject("Welcome to Nexora Finance 🎉 ")
+                .subject("Password reset code ")
                 .templateName("password-reset")
                 .templateVariables(templateVariables)
                 .build();
@@ -192,8 +194,48 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public Response<?> updatePasswordViaResetCode(ResetPasswordRequest resetPasswordRequest) {
-        return null;
+       String code = resetPasswordRequest.getCode();
+       String newPassword = resetPasswordRequest.getNewPassword();
+
+       //Find and validate code
+
+        PasswordResetCode resetCode = passwordResetCodeRepo.findByCode(code)
+                .orElseThrow(() -> new BadRequestException("Invalid Reset Code"));
+
+        // Check Expiration first
+        if(resetCode.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetCodeRepo.delete(resetCode); // clean up expired code
+            throw new BadRequestException("Reset Code has expired");
+        }
+
+        //update user password
+
+        User user = resetCode.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+
+        passwordResetCodeRepo.delete(resetCode);
+
+        //Send email
+        Map<String, Object> templateVariables = new HashMap<>();
+        templateVariables.put("name", user.getFirstName());
+
+        NotificationDTO confirmationEmail = NotificationDTO.builder()
+                .recipient(user.getEmail())
+                .subject("Password updated Successfully")
+                .templateName("password-update-confirmation")
+                .templateVariables(templateVariables)
+                .build();
+        notificationService.sendEmail(confirmationEmail , user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Password updated successfully")
+                .build();
+
+
     }
 
     private LocalDateTime calculateExpiryDate() {
