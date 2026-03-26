@@ -5,9 +5,12 @@ import com.Nexora.NexoraFinance.auth_users.dtos.LoginRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.LoginResponse;
 import com.Nexora.NexoraFinance.auth_users.dtos.RegistrationRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.ResetPasswordRequest;
+import com.Nexora.NexoraFinance.auth_users.entity.PasswordResetCode;
 import com.Nexora.NexoraFinance.auth_users.entity.User;
+import com.Nexora.NexoraFinance.auth_users.repo.PasswordResetCodeRepo;
 import com.Nexora.NexoraFinance.auth_users.repo.UserRepo;
 import com.Nexora.NexoraFinance.auth_users.services.AuthService;
+import com.Nexora.NexoraFinance.auth_users.services.CodeGenerator;
 import com.Nexora.NexoraFinance.enums.AccountType;
 import com.Nexora.NexoraFinance.enums.Currency;
 import com.Nexora.NexoraFinance.exceptions.BadRequestException;
@@ -20,10 +23,12 @@ import com.Nexora.NexoraFinance.role.repo.RoleRepo;
 import com.Nexora.NexoraFinance.security.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +45,12 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final NotificationService notificationService;
+
+    private final CodeGenerator codeGenerator;
+    private final PasswordResetCodeRepo passwordResetCodeRepo;
+
+    @Value("${password.reset.link}")
+    private String resetLink;
 
 
 
@@ -106,7 +117,7 @@ public class AuthServiceImpl implements AuthService {
         NotificationDTO accountCreatedEmail = NotificationDTO.builder()
                 .recipient(savedUser.getEmail())
                 .subject("Your account has been created ✅")
-                .templateName("account-creaeted")
+                .templateName("account-created")
                 .templateVariables(accountVars)
                 .build();
         notificationService.sendEmail(accountCreatedEmail , savedUser);
@@ -146,11 +157,46 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<?> forgetPassword(String email) {
-        return null;
+        User user = userRepo.findByEmail(email).orElseThrow(() -> new NotFoundException("USER NOT FOUND"));
+        passwordResetCodeRepo.deleteByUserId(user.getId());
+
+        String code = codeGenerator.generateUniqueCode();
+
+        PasswordResetCode resetCode = PasswordResetCode.builder()
+                .user(user)
+                .code(code)
+                .expiryDate(calculateExpiryDate())
+                .used(false)
+                .build();
+
+        passwordResetCodeRepo.save(resetCode);
+
+        //send email reset link out
+        Map<String, Object> templateVariables = new HashMap<>();
+        templateVariables.put("name", user.getFirstName());
+        templateVariables.put("resetLink" , resetLink + code);
+
+        NotificationDTO notificationDTO = NotificationDTO.builder()
+                .recipient(user.getEmail())
+                .subject("Welcome to Nexora Finance 🎉 ")
+                .templateName("password-reset")
+                .templateVariables(templateVariables)
+                .build();
+        notificationService.sendEmail(notificationDTO , user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Password reset code sent to your email")
+                .build();
+
     }
 
     @Override
     public Response<?> updatePasswordViaResetCode(ResetPasswordRequest resetPasswordRequest) {
         return null;
+    }
+
+    private LocalDateTime calculateExpiryDate() {
+        return LocalDateTime.now().plusHours(5);
     }
 }

@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface PasswordResetCodeRepo extends JpaRepository<PasswordResetCode, Long> {
     Optional<PasswordResetCode> findByCode(String code);
-    void deleteByUser(Long userId);
+    void deleteByUserId(Long userId);
 }

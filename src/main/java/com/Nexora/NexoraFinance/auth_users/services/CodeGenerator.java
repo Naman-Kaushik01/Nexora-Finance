@@ -15,7 +15,7 @@ public class CodeGenerator {
 
     private static final int CODE_LENGTH = 5;
 
-    private String generateUniqueCode(){
+    public String generateUniqueCode(){
         String code;
         do{
             code = generateRandomCode();
