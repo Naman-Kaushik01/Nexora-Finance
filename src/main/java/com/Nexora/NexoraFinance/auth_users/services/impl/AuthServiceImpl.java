@@ -121,7 +121,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Response<LoginResponse> login(LoginRequest loginRequest) {
-        return null;
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
+        User user = userRepo.findByEmail(email).orElseThrow(() -> new NotFoundException("EMAIL NOT FOUND"));
+
+        if(!passwordEncoder.matches(password,user.getPassword())){
+            throw new BadRequestException("INVALID PASSWORD");
+        }
+
+        String token = tokenService.generateToken(user.getEmail());
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .roles(user.getRoles().stream().map(Role::getName).toList())
+                .token(token)
+                .build();
+
+        return Response.<LoginResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Login Successful")
+                .data(loginResponse)
+                .build();
     }
 
     @Override
