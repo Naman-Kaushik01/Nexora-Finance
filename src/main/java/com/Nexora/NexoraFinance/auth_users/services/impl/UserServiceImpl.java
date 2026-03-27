@@ -23,9 +23,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +40,8 @@ public class UserServiceImpl implements UserService {
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+
+    private final String uploadDir ="uploads/profile-pictures/";
 
     @Override
     public User getCurrentLoggedInUser() {
@@ -121,6 +127,45 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response<?> uploadProfilePicture(MultipartFile file) {
-        return null;
+        User user = getCurrentLoggedInUser();
+
+        try{
+            Path uploadPath = Paths.get(uploadDir);
+            if(!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            if(user.getProfilePictureURL() !=null && !user.getProfilePictureURL().isEmpty()) {
+                Path oldFile = Paths.get(user.getProfilePictureURL());
+                if(Files.exists(oldFile)) {
+                    Files.delete(oldFile);
+                }
+            }
+
+            //GENERATE A UNIQUE FILE NAME TO AVOID CONFLICTS
+
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = "";
+            if(originalFilename != null && originalFilename.contains(".")){
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String newFileName = UUID.randomUUID() + fileExtension;
+            Path filePath = uploadPath.resolve(newFileName);
+
+            Files.copy(file.getInputStream() ,filePath );
+
+            String fileUrl = uploadDir + newFileName;
+            user.setProfilePictureURL(fileUrl);
+            userRepo.save(user);
+
+            return Response.builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Profile picture updated successfully")
+                    .data(fileUrl)
+                    .build();
+
+
+        }catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }
