@@ -1,11 +1,14 @@
 package com.Nexora.NexoraFinance.auth_users.services.impl;
 
+import com.Nexora.NexoraFinance.auth_users.dtos.LoginResponse;
 import com.Nexora.NexoraFinance.auth_users.dtos.UpdatePasswordRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.UserDTO;
 import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.auth_users.repo.UserRepo;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
+import com.Nexora.NexoraFinance.exceptions.BadRequestException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
+import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import com.Nexora.NexoraFinance.res.Response;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +80,43 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response<?> updatePassword(UpdatePasswordRequest updatePasswordRequest) {
-        return null;
+        User user = getCurrentLoggedInUser();
+
+        String newPassword = updatePasswordRequest.getNewPassword();
+        String oldPassword = updatePasswordRequest.getOldPassword();
+
+        if(oldPassword == null || newPassword == null) {
+            throw new BadRequestException("Old Password or New Password is required");
+        }
+
+        //validate the old password
+        if(!passwordEncoder.matches(oldPassword,user.getPassword())) {
+            throw new BadRequestException("Old Password not correct");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userRepo.save(user);
+
+        //SEND PASSWORD CHANGE CONFIRMATION E-MAIL
+
+        Map<String,Object> templateVariable = new HashMap<>();
+        templateVariable.put("name" , user.getFirstName());
+
+        NotificationDTO notificationDTO = NotificationDTO.builder()
+                .recipient(user.getEmail())
+                .subject("Your password has been successfully changed ")
+                .templateName("password-change")
+                .templateVariables(templateVariable)
+                .build();
+
+        notificationService.sendEmail(notificationDTO , user);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Password has been changed successfully")
+                .build();
+
     }
 
     @Override
