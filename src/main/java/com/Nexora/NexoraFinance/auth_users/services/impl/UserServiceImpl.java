@@ -59,15 +59,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response<UserDTO> getMyProfile() {
+
         User user = getCurrentLoggedInUser();
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
 
         return Response.<UserDTO>builder()
                 .statusCode(HttpStatus.OK.value())
-                .message("User retrieved successfully")
+                .message("User retrieved")
                 .data(userDTO)
                 .build();
     }
+
 
     @Override
     public Response<Page<UserDTO>> getAllUsers(int page, int size) {

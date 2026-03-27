@@ -26,7 +26,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private CustomUserDetailsService customUserDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -39,31 +39,36 @@ public class AuthFilter extends OncePerRequestFilter {
         if (token != null) {
             String email;
             try {
-
                 email = tokenService.getUsernameFromToken(token);
+            } catch (Exception e) {
 
-            }catch (Exception ex){
                 log.error("Exception occured while extracting username from token");
-                AuthenticationException authenticationException = new BadCredentialsException(ex.getMessage());
+                AuthenticationException authenticationException = new BadCredentialsException(e.getMessage());
                 customAuthenticationEntryPoint.commence(request, response, authenticationException);
                 return;
             }
+
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
 
-            if(StringUtils.hasText(email) && tokenService.isTokenValid(token, userDetails)) {
+            if (StringUtils.hasText(email) && tokenService.isTokenValid(token, userDetails)) {
+
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
                         userDetails.getAuthorities());
+
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         }
+
+
         try {
             filterChain.doFilter(request, response);
-        }catch (Exception ex){
-            log.error(ex.getMessage());
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
+
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
@@ -72,6 +77,5 @@ public class AuthFilter extends OncePerRequestFilter {
             return tokenWithBearer.substring(7);
         }
         return null;
-
     }
 }
