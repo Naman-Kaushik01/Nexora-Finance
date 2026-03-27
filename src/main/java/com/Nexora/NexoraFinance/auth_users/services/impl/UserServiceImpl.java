@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,12 +46,29 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Response<UserDTO> getMyProfile() {
-        return null;
+        User user = getCurrentLoggedInUser();
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        return Response.<UserDTO>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User retrieved successfully")
+                .data(userDTO)
+                .build();
     }
 
     @Override
     public Response<Page<UserDTO>> getAllUsers(int page, int size) {
-        return null;
+
+        Page<User> users = userRepo.findAll(PageRequest.of(page, size));
+        Page<UserDTO> userDTOS = users.map(user->
+                modelMapper.map(user, UserDTO.class)
+        );
+        return Response.<Page<UserDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User retrieved successfully")
+                .data(userDTOS)
+                .build();
+
     }
 
     @Override
