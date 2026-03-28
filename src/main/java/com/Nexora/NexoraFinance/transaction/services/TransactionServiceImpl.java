@@ -95,4 +95,31 @@ public class TransactionServiceImpl implements TransactionService {
         accountRepo.save(account);
 
     }
+
+    private void handleTransfer(TransactionRequest request, Transaction transaction) {
+        Account sourceAccount = accountRepo.findByAccountNumber(request.getAccountNumber())
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        Account destinationAccount = accountRepo.findByAccountNumber(request.getDestinationAccountNumber())
+                .orElseThrow(() -> new NotFoundException("Desination Account not found"));
+
+        if(sourceAccount.getBalance().compareTo(request.getAmount()) < 0){
+            throw new InsufficientBalanceException("Insufficient balance in source account");
+        }
+
+        //Deduct from source account
+
+        sourceAccount.setBalance(sourceAccount.getBalance().subtract(request.getAmount()));
+        accountRepo.save(sourceAccount);
+
+        //Add to Destination
+        destinationAccount.setBalance(destinationAccount.getBalance().add(request.getAmount()));
+        accountRepo.save(destinationAccount);
+
+        transaction.setAccount(sourceAccount);
+        transaction.setSourceAccount(sourceAccount.getAccountNumber());
+        transaction.setDestinationAccount(destinationAccount.getAccountNumber());
+
+
+    }
 }
