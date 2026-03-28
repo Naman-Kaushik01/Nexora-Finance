@@ -8,10 +8,13 @@ import com.Nexora.NexoraFinance.auth_users.services.UserService;
 import com.Nexora.NexoraFinance.enums.AccountStatus;
 import com.Nexora.NexoraFinance.enums.AccountType;
 import com.Nexora.NexoraFinance.enums.Currency;
+import com.Nexora.NexoraFinance.exceptions.BadRequestException;
+import com.Nexora.NexoraFinance.exceptions.NotFoundException;
 import com.Nexora.NexoraFinance.res.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
@@ -53,12 +56,41 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Response<List<AccountDTO>> getMyAccounts() {
-        return null;
+        User user = userService.getCurrentLoggedInUser();
+
+        List<AccountDTO> accounts = accountRepo.findByUserId(user.getId())
+                .stream()
+                .map(account -> modelMapper.map(account , AccountDTO.class))
+                .toList();
+
+        return Response.<List<AccountDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("User accounts fetched successfully")
+                .data(accounts)
+                .build();
     }
 
     @Override
     public Response<?> closeAccount(String accountNumber) {
-        return null;
+        User user = userService.getCurrentLoggedInUser();
+        Account account = accountRepo.findByAccountNumber(accountNumber)
+                .orElseThrow(()-> new NotFoundException("AccountNotFound"));
+
+        if(!user.getAccounts().contains(account)){
+            throw new NotFoundException("Account does not belong to you");
+        }
+        if (account.getBalance().compareTo(BigDecimal.ZERO) > 0){
+            throw new BadRequestException("Account balance must be zero before closing");
+        }
+        account.setAccountStatus(AccountStatus.CLOSED);
+        account.setClosedAt(LocalDateTime.now());
+        accountRepo.save(account);
+
+        return Response.builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Account closed successfully")
+                .build();
+
     }
 
     private String generateAccountNumber() {
