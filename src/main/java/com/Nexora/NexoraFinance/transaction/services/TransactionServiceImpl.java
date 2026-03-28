@@ -1,10 +1,12 @@
 package com.Nexora.NexoraFinance.transaction.services;
 
 
+import com.Nexora.NexoraFinance.account.entity.Account;
 import com.Nexora.NexoraFinance.account.repo.AccountRepo;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
 import com.Nexora.NexoraFinance.enums.TransactionStatus;
 import com.Nexora.NexoraFinance.exceptions.InvalidTransactionException;
+import com.Nexora.NexoraFinance.exceptions.NotFoundException;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import com.Nexora.NexoraFinance.res.Response;
 import com.Nexora.NexoraFinance.transaction.dtos.TransactionDTO;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +36,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
+    @Transactional
     public Response<?> createTransaction(TransactionRequest transactionRequest) {
 
         Transaction transaction = new Transaction();
@@ -65,5 +69,15 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Response<List<TransactionDTO>> getTransactionsForMyAccount(String accountNumber, int page, int size) {
         return null;
+    }
+
+    private void handleDeposit(TransactionRequest request, Transaction transaction) {
+        Account account = accountRepo.findByAccountNumber(request.getAccountNumber())
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        account.setBalance(account.getBalance().add(request.getAmount()));
+        transaction.setAccount(account);
+        accountRepo.save(account);
+
     }
 }
