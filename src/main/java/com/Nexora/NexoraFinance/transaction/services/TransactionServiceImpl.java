@@ -3,11 +3,14 @@ package com.Nexora.NexoraFinance.transaction.services;
 
 import com.Nexora.NexoraFinance.account.entity.Account;
 import com.Nexora.NexoraFinance.account.repo.AccountRepo;
+import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
 import com.Nexora.NexoraFinance.enums.TransactionStatus;
+import com.Nexora.NexoraFinance.enums.TransactionType;
 import com.Nexora.NexoraFinance.exceptions.InsufficientBalanceException;
 import com.Nexora.NexoraFinance.exceptions.InvalidTransactionException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
+import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import com.Nexora.NexoraFinance.res.Response;
 import com.Nexora.NexoraFinance.transaction.dtos.TransactionDTO;
@@ -20,9 +23,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static java.lang.StringUTF16.compareTo;
 
 @Service
 @RequiredArgsConstructor
@@ -119,7 +123,86 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setAccount(sourceAccount);
         transaction.setSourceAccount(sourceAccount.getAccountNumber());
         transaction.setDestinationAccount(destinationAccount.getAccountNumber());
+    }
 
+    private void sendTransactionNotification(Transaction tnx) {
+        User user = tnx.getAccount().getUser();
+        String subject;
+        String template;
+
+        Map<String , Object> templateVariables = new HashMap<>();
+
+        templateVariables.put("name" , user.getFirstName());
+        templateVariables.put("amount" , tnx.getAmount());
+        templateVariables.put("accountNumber" , tnx.getAccount().getAccountNumber());
+        templateVariables.put("date" , tnx.getTransactionDate());
+        templateVariables.put("balance" , tnx.getAccount().getBalance());
+
+        if(tnx.getTransactionType() == TransactionType.DEPOSIT){
+            subject = "Credit Alert";
+            template = "credit-alert";
+
+            NotificationDTO notificationEmailToSendOut = NotificationDTO.builder()
+                    .recipient(user.getEmail())
+                    .subject(subject)
+                    .templateName(template)
+                    .templateVariables(templateVariables)
+                    .build();
+
+            notificationService.sendEmail(notificationEmailToSendOut , user);
+
+        }else if(tnx.getTransactionType() == TransactionType.WITHDRAWAL){
+            subject = "Debit Alert";
+            template = "debit-alert";
+
+            NotificationDTO notificationEmailToSendOut = NotificationDTO.builder()
+                    .recipient(user.getEmail())
+                    .subject(subject)
+                    .templateName(template)
+                    .templateVariables(templateVariables)
+                    .build();
+
+            notificationService.sendEmail(notificationEmailToSendOut , user);
+
+        } else if (tnx.getTransactionType()== TransactionType.TRANSFER) {
+            subject = "Debit Alert";
+            template = "debit-alert";
+
+            NotificationDTO notificationEmailToSendOut = NotificationDTO.builder()
+                    .recipient(user.getEmail())
+                    .subject(subject)
+                    .templateName(template)
+                    .templateVariables(templateVariables)
+                    .build();
+
+            notificationService.sendEmail(notificationEmailToSendOut , user);
+
+            //Receiver CREDIT alert
+
+            Account destinationAccount = accountRepo.findByAccountNumber(tnx.getDestinationAccount())
+                    .orElseThrow(()-> new NotFoundException("Destination Account not found"));
+
+            User receiver = destinationAccount.getUser();
+
+            Map<String , Object> rcvVars = new HashMap<>();
+
+            rcvVars.put("name" , user.getFirstName());
+            rcvVars.put("amount" , tnx.getAmount());
+            rcvVars.put("accountNumber" , destinationAccount.getAccountNumber());
+            rcvVars.put("date" , tnx.getTransactionDate());
+            rcvVars.put("balance" , tnx.getAccount().getBalance());
+
+
+            NotificationDTO notificationEmailToSendOutToReceiver = NotificationDTO.builder()
+                    .recipient(receiver.getEmail())
+                    .subject("Credit Alert")
+                    .templateName("credit-alert")
+                    .templateVariables(rcvVars)
+                    .build();
+
+            notificationService.sendEmail(notificationEmailToSendOutToReceiver , user);
+
+        }
 
     }
 }
