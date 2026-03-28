@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface TransactionService {
     Response<?>createTransaction(TransactionRequest transactionRequest);
-    Response<List<TransactionDTO>> getTransactionsForAnAccount(String accountNumber , int page , int size);
+    Response<List<TransactionDTO>> getTransactionsForMyAccount(String accountNumber , int page , int size);
 
 }

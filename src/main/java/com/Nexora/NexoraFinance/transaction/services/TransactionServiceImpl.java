@@ -3,10 +3,13 @@ package com.Nexora.NexoraFinance.transaction.services;
 
 import com.Nexora.NexoraFinance.account.repo.AccountRepo;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
+import com.Nexora.NexoraFinance.enums.TransactionStatus;
+import com.Nexora.NexoraFinance.exceptions.InvalidTransactionException;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import com.Nexora.NexoraFinance.res.Response;
 import com.Nexora.NexoraFinance.transaction.dtos.TransactionDTO;
 import com.Nexora.NexoraFinance.transaction.dtos.TransactionRequest;
+import com.Nexora.NexoraFinance.transaction.entity.Transaction;
 import com.Nexora.NexoraFinance.transaction.repo.TransactionRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +34,36 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Response<?> createTransaction(TransactionRequest transactionRequest) {
-        return null;
+
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(transactionRequest.getTransactionType());
+        transaction.setAmount(transactionRequest.getAmount());
+        transaction.setDescription(transactionRequest.getDescription());
+
+        switch (transactionRequest.getTransactionType()) {
+            case DEPOSIT -> handleDeposit(transactionRequest , transaction);
+            case WITHDRAWAL -> handleWithdrawal(transactionRequest , transaction);
+            case TRANSFER -> handleTransfer(transactionRequest , transaction);
+            default -> throw  new InvalidTransactionException("Invalid transaction type");
+        }
+
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        Transaction savedTransaction = transactionRepo.save(transaction);
+
+        //send a notification out
+
+        sendTransactionNotification(savedTransaction);
+
+        return Response.builder()
+                .statusCode(200)
+                .message("Transaction Successful")
+                .build();
+
+
     }
 
     @Override
-    public Response<List<TransactionDTO>> getTransactionsForAnAccount(String accountNumber, int page, int size) {
+    public Response<List<TransactionDTO>> getTransactionsForMyAccount(String accountNumber, int page, int size) {
         return null;
     }
 }
