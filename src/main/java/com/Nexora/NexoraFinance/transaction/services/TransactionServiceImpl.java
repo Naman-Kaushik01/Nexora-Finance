@@ -5,6 +5,7 @@ import com.Nexora.NexoraFinance.account.entity.Account;
 import com.Nexora.NexoraFinance.account.repo.AccountRepo;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
 import com.Nexora.NexoraFinance.enums.TransactionStatus;
+import com.Nexora.NexoraFinance.exceptions.InsufficientBalanceException;
 import com.Nexora.NexoraFinance.exceptions.InvalidTransactionException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
 import com.Nexora.NexoraFinance.notification.services.NotificationService;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static java.lang.StringUTF16.compareTo;
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +79,18 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new NotFoundException("Account not found"));
 
         account.setBalance(account.getBalance().add(request.getAmount()));
+        transaction.setAccount(account);
+        accountRepo.save(account);
+
+    }
+    private void handleWithdrawal(TransactionRequest request, Transaction transaction) {
+        Account account  = accountRepo.findByAccountNumber(request.getAccountNumber())
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        if (account.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance");
+        }
+        account.setBalance(account.getBalance().subtract(request.getAmount()));
         transaction.setAccount(account);
         accountRepo.save(account);
 
