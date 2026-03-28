@@ -1,6 +1,7 @@
 package com.Nexora.NexoraFinance.auth_users.services.impl;
 
 import com.Nexora.NexoraFinance.account.entity.Account;
+import com.Nexora.NexoraFinance.account.services.AccountService;
 import com.Nexora.NexoraFinance.auth_users.dtos.LoginRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.LoginResponse;
 import com.Nexora.NexoraFinance.auth_users.dtos.RegistrationRequest;
@@ -49,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final CodeGenerator codeGenerator;
     private final PasswordResetCodeRepo passwordResetCodeRepo;
+    private final AccountService accountService;
 
     @Value("${password.reset.link}")
     private String resetLink;
@@ -89,9 +91,9 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepo.save(user);
 
-        //TODO AUTO GENERATE AN ACCOUNT NUMBER FOR THE USER
+        //CREATE ACCOUNT NUMBER FOR THE USER
 
-        //Account savedAccount = accountService.createAccount(AccountType.SAVINGS,savedUser);
+        Account savedAccount = accountService.createAccount(AccountType.SAVINGS,savedUser);
 
         //SEND A WELCOME EMAIL
 
@@ -111,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
 
         Map<String,Object> accountVars = new HashMap<>();
         accountVars.put("name" , savedUser.getFirstName());
-        //accountVars.put("accountNumber" , savedAccount.getAccountNumber());
+        accountVars.put("accountNumber" , savedAccount.getAccountNumber());
         accountVars.put("accountType" ,AccountType.SAVINGS.name() );
         accountVars.put("currency" , Currency.RUPEES);
 
@@ -126,7 +128,7 @@ public class AuthServiceImpl implements AuthService {
         return Response.<String>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Your account has been created successfully")
-               // .data("Email of your account details has been sent to you . Your account number is : "+ savedAccount.getAccountNumber())
+                .data("Email of your account details has been sent to you . Your account number is : "+ savedAccount.getAccountNumber())
                 .build();
 
     }
