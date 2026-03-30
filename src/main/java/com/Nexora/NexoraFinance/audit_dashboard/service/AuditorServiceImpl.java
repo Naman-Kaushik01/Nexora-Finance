@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,26 +26,39 @@ public class AuditorServiceImpl implements AuditorService {
 
     @Override
     public Map<String, Long> getSystemTotals() {
-        return Map.of();
+        long totalUsers = userRepo.count();
+        long totalAccounts = accountRepo.count();
+        long totalTransactions = transactionRepo.count();
+        return Map.of(
+                "totalUsers" , totalUsers,
+                "totalAccounts" , totalAccounts,
+                "totalTransactions" , totalTransactions
+        );
     }
 
     @Override
     public Optional<UserDTO> findUserByEmail(String email) {
-        return Optional.empty();
+       return userRepo.findByEmail(email)
+               .map(user -> modelMapper.map(user, UserDTO.class));
     }
 
     @Override
     public Optional<AccountDTO> findAccountDetailsByAccountNumber(String accountNumber) {
-        return Optional.empty();
+        return accountRepo.findByAccountNumber(accountNumber)
+                .map(a -> modelMapper.map(a, AccountDTO.class));
     }
 
     @Override
     public List<TransactionDTO> findTransactionsByAccountNumber(String accountNumber) {
-        return List.of();
+       return transactionRepo.findByAccount_AccountNumber(accountNumber)
+               .stream()
+               .map(transaction -> modelMapper.map(transaction , TransactionDTO.class))
+               .collect(Collectors.toList());
     }
 
     @Override
     public Optional<TransactionDTO> findTransactionById(Long transactionId) {
-        return Optional.empty();
+        return transactionRepo.findById(transactionId)
+                .map(transaction -> modelMapper.map(transaction , TransactionDTO.class));
     }
 }
