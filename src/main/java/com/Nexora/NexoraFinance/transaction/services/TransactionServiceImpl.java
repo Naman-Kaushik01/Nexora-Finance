@@ -7,6 +7,7 @@ import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
 import com.Nexora.NexoraFinance.enums.TransactionStatus;
 import com.Nexora.NexoraFinance.enums.TransactionType;
+import com.Nexora.NexoraFinance.exceptions.BadRequestException;
 import com.Nexora.NexoraFinance.exceptions.InsufficientBalanceException;
 import com.Nexora.NexoraFinance.exceptions.InvalidTransactionException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
@@ -20,6 +21,11 @@ import com.Nexora.NexoraFinance.transaction.repo.TransactionRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +81,35 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Response<List<TransactionDTO>> getTransactionsForMyAccount(String accountNumber, int page, int size) {
-        return null;
+        User user = userService.getCurrentLoggedInUser();
+
+        Account account = accountRepo.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new NotFoundException("Account not found"));
+
+        //make sure the account belongs to the user , an extra security check
+
+        if(!account.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("Account does not belong to the authenticated user");
+        }
+
+        Pageable pageable = PageRequest.of(page, size , Sort.by("transactionDate").descending());
+        Page<Transaction> txns = transactionRepo.findByAccount_AccountNumber(accountNumber, pageable);
+
+        List<TransactionDTO> transactionDTOS = txns.getContent().stream()
+                .map(transaction -> modelMapper.map(transaction , TransactionDTO.class))
+                .toList();
+
+        return Response.<List<TransactionDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Transactions retrieved")
+                .meta(Map.of(
+                        "currentPage" ,txns.getNumber(),
+                        "totalItems", txns.getTotalElements(),
+                        "totalPages" , txns.getTotalPages(),
+                        "pageSize" , txns.getSize()
+
+                ))
+                .build();
     }
 
     private void handleDeposit(TransactionRequest request, Transaction transaction) {
