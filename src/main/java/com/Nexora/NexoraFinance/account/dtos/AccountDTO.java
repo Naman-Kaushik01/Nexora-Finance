@@ -30,7 +30,7 @@ public class AccountDTO {
 
     private Long id;
 
-    private String accountName;
+    private String accountNumber;
 
     private BigDecimal balance;
 

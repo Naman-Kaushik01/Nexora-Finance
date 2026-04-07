@@ -49,9 +49,9 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication == null) {
-           throw new NotFoundException("User is not authenticated");
+            throw new NotFoundException("User is not authenticated");
         }
-       String email = authentication.getName();
+        String email = authentication.getName();
         return userRepo.findByEmail(email).orElseThrow(
                 () -> new NotFoundException("User not found with email: " + email)
         );

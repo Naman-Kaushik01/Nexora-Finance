@@ -39,7 +39,7 @@ public class User {
     private String profilePictureURL;
     private boolean active = true;
 
-    @ManyToAny(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name="user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
