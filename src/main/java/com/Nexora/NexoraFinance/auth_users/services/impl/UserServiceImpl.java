@@ -41,7 +41,12 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
-    private final String uploadDir ="uploads/profile-pictures/";
+
+//this will save image into the backend root folder
+//    private final String uploadDir ="uploads/profile-pictures/";
+
+    //this will save image into the frontend public folder for easy access in the frontend
+    private final String uploadDir ="/Users/namankaushik/Nexora Front-end/public/profile-picture/";
 
     @Override
     public User getCurrentLoggedInUser() {
@@ -155,7 +160,9 @@ public class UserServiceImpl implements UserService {
 
             Files.copy(file.getInputStream() ,filePath );
 
-            String fileUrl = uploadDir + newFileName;
+//            String fileUrl = uploadDir + newFileName; // this is for backend
+
+            String fileUrl = "profile-picture/" + newFileName; // this is the relative path from frontend
             user.setProfilePictureURL(fileUrl);
             userRepo.save(user);
 

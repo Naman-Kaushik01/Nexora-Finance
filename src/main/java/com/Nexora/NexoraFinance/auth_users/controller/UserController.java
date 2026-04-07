@@ -39,7 +39,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updatePassword(updatePasswordRequest));
     }
 
-    @PutMapping("/update-profile-picture")
+    @PutMapping("/profile-picture")
     public ResponseEntity<Response<?>> updateProfilePicture(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(userService.uploadProfilePicture(file));
     }
