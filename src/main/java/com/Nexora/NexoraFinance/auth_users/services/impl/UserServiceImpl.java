@@ -6,6 +6,7 @@ import com.Nexora.NexoraFinance.auth_users.dtos.UserDTO;
 import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.auth_users.repo.UserRepo;
 import com.Nexora.NexoraFinance.auth_users.services.UserService;
+import com.Nexora.NexoraFinance.aws.S3Service;
 import com.Nexora.NexoraFinance.exceptions.BadRequestException;
 import com.Nexora.NexoraFinance.exceptions.NotFoundException;
 import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
@@ -23,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final S3Service s3Service;
 
 
 //this will save image into the backend root folder
@@ -177,4 +180,34 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException(e.getMessage());
         }
     }
+        @Override
+        public Response<?> uploadProfilePictureToS3(MultipartFile file){
+
+            log.info("Inside uploadProfilePictureToS3()");
+            User user = getCurrentLoggedInUser();
+
+            try {
+
+                if(user.getProfilePictureURL() != null && !user.getProfilePictureURL().isEmpty()){
+                    s3Service.deleteFile(user.getProfilePictureURL());
+                }
+                String s3Url = s3Service.uploadFile(file, "profile-pictures");
+
+                log.info("profile url is: {}", s3Url );
+
+                user.setProfilePictureURL(s3Url);
+                userRepo.save(user);
+
+                return Response.builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("Profile picture uploaded successfully.")
+                        .data(s3Url)
+                        .build();
+
+            }catch (IOException e){
+
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+
 }
