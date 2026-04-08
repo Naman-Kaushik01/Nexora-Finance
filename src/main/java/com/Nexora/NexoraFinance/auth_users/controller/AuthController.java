@@ -32,7 +32,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 
-    @PostMapping("/forget-password")
+    @PostMapping("/forgot-password")
     public ResponseEntity<Response<?>> forgetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
         return ResponseEntity.ok(authService.forgetPassword(resetPasswordRequest.getEmail()));
     }
