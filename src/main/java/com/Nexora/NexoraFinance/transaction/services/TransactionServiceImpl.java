@@ -80,37 +80,43 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public Response<List<TransactionDTO>> getTransactionsForMyAccount(String accountNumber, int page, int size) {
+
+        // Get the currently logged-in user
         User user = userService.getCurrentLoggedInUser();
 
+        // Find the account by its number
         Account account = accountRepo.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new NotFoundException("Account not found"));
 
-        //make sure the account belongs to the user , an extra security check
-
-        if(!account.getUser().getId().equals(user.getId())) {
+        //make sure he account belongs to the user. an extra security check
+        if (!account.getUser().getId().equals(user.getId())) {
             throw new BadRequestException("Account does not belong to the authenticated user");
         }
 
-        Pageable pageable = PageRequest.of(page, size , Sort.by("transactionDate").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending());
         Page<Transaction> txns = transactionRepo.findByAccount_AccountNumber(accountNumber, pageable);
 
         List<TransactionDTO> transactionDTOS = txns.getContent().stream()
-                .map(transaction -> modelMapper.map(transaction , TransactionDTO.class))
+                .map(transaction -> modelMapper.map(transaction, TransactionDTO.class))
                 .toList();
 
         return Response.<List<TransactionDTO>>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Transactions retrieved")
+                .data(transactionDTOS)
                 .meta(Map.of(
-                        "currentPage" ,txns.getNumber(),
+                        "currentPage", txns.getNumber(),
                         "totalItems", txns.getTotalElements(),
-                        "totalPages" , txns.getTotalPages(),
-                        "pageSize" , txns.getSize()
-
+                        "totalPages", txns.getTotalPages(),
+                        "pageSize", txns.getSize()
                 ))
                 .build();
+
+
     }
+
 
     private void handleDeposit(TransactionRequest request, Transaction transaction) {
         Account account = accountRepo.findByAccountNumber(request.getAccountNumber())
@@ -236,7 +242,6 @@ public class TransactionServiceImpl implements TransactionService {
                     .build();
 
             notificationService.sendEmail(notificationEmailToSendOutToReceiver , user);
-
         }
 
     }
