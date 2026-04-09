@@ -220,11 +220,12 @@ public class TransactionServiceImpl implements TransactionService {
 
             Map<String , Object> rcvVars = new HashMap<>();
 
-            rcvVars.put("name" , user.getFirstName());
+            rcvVars.put("name" , receiver.getFirstName());
             rcvVars.put("amount" , tnx.getAmount());
             rcvVars.put("accountNumber" , destinationAccount.getAccountNumber());
             rcvVars.put("date" , tnx.getTransactionDate());
-            rcvVars.put("balance" , tnx.getAccount().getBalance());
+            rcvVars.put("balance" , destinationAccount.getBalance());
+            rcvVars.put("senderAccount" , tnx.getSourceAccount());
 
 
             NotificationDTO notificationEmailToSendOutToReceiver = NotificationDTO.builder()
