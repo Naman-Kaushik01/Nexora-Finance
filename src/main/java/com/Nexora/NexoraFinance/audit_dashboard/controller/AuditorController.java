@@ -20,15 +20,18 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/audit")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
+
 public class AuditorController {
 
     private final AuditorService auditorService;
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
     @GetMapping("/totals")
     public ResponseEntity<Map<String, Long>> getSystemtotals() {
         return ResponseEntity.ok(auditorService.getSystemTotals());
     }
+
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
     @GetMapping("/users")
     public ResponseEntity<UserDTO> findUsersByEmail(@RequestParam String email) {
         Optional<UserDTO> userDTO = auditorService.findUserByEmail(email);
@@ -38,7 +41,8 @@ public class AuditorController {
 
     }
 
-    @GetMapping("/account")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
+    @GetMapping("/accounts")
     public ResponseEntity<AccountDTO> findAccountDetailsByAccountNumber(@RequestParam String accountNumber) {
         Optional<AccountDTO> accountDTO = auditorService.findAccountDetailsByAccountNumber(accountNumber);
 
@@ -46,7 +50,9 @@ public class AuditorController {
                 .orElseGet(()-> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 
     }
-    @GetMapping("/transactions/by-accounts")
+
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
+    @GetMapping("/transactions/by-account")
     public ResponseEntity<List<TransactionDTO>>getTransactionsByAccountNumber(@RequestParam String accountNumber) {
         List<TransactionDTO> transactionDTOList = auditorService.findTransactionsByAccountNumber(accountNumber);
 
@@ -57,6 +63,7 @@ public class AuditorController {
        }
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
     @GetMapping("/transactions/by-id")
     public ResponseEntity<TransactionDTO> getTransactionsById(@RequestParam Long id) {
         Optional<TransactionDTO> transactionDTO = auditorService.findTransactionById(id);
