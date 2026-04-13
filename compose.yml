@@ -7,7 +7,7 @@ services:
       context: .
     # Map port 8090 on the host to port 8090 in the container.
     ports:
-      - "8080:8080"
+      - "8090:8090"
     # Set the restart policy for the container. `unless-stopped` will restart the container
     # unless it is explicitly stopped.
     restart: unless-stopped
