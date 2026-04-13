@@ -13,6 +13,7 @@ public class AccountController {
 
     private final AccountService accountService;
 
+    //this will give profile section
     @GetMapping("/me")
     public ResponseEntity<Response<?>> getMyAccounts(){
         return ResponseEntity.ok(accountService.getMyAccounts());
