@@ -6,7 +6,6 @@ import com.Nexora.NexoraFinance.auth_users.dtos.RegistrationRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.ResetPasswordRequest;
 import com.Nexora.NexoraFinance.auth_users.services.AuthService;
 import com.Nexora.NexoraFinance.res.Response;
-import com.Nexora.NexoraFinance.role.entity.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -2,13 +2,11 @@ package com.Nexora.NexoraFinance.transaction.dtos;
 
 
 import com.Nexora.NexoraFinance.account.dtos.AccountDTO;
-import com.Nexora.NexoraFinance.account.entity.Account;
 import com.Nexora.NexoraFinance.enums.TransactionStatus;
 import com.Nexora.NexoraFinance.enums.TransactionType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
