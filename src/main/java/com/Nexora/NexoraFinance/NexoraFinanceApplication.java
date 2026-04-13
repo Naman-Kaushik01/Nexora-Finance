@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @EnableAsync
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class NexoraFinanceApplication {
 
 	public static void main(String[] args) {
