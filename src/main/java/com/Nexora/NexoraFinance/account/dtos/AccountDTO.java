@@ -1,7 +1,6 @@
 package com.Nexora.NexoraFinance.account.dtos;
 
 import com.Nexora.NexoraFinance.auth_users.dtos.UserDTO;
-import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.enums.AccountStatus;
 import com.Nexora.NexoraFinance.enums.AccountType;
 import com.Nexora.NexoraFinance.enums.Currency;
@@ -10,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

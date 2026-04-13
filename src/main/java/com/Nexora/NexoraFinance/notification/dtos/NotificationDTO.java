@@ -1,16 +1,13 @@
 package com.Nexora.NexoraFinance.notification.dtos;
 
-import com.Nexora.NexoraFinance.auth_users.entity.User;
 import com.Nexora.NexoraFinance.enums.NotificationType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 import java.util.Map;

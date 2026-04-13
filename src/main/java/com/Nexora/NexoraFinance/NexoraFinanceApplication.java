@@ -1,20 +1,13 @@
 package com.Nexora.NexoraFinance;
 
-import com.Nexora.NexoraFinance.auth_users.entity.User;
-import com.Nexora.NexoraFinance.enums.NotificationType;
-import com.Nexora.NexoraFinance.notification.dtos.NotificationDTO;
-import com.Nexora.NexoraFinance.notification.services.NotificationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @EnableAsync
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 public class NexoraFinanceApplication {
 
 	public static void main(String[] args) {

@@ -1,6 +1,5 @@
 package com.Nexora.NexoraFinance.auth_users.services.impl;
 
-import com.Nexora.NexoraFinance.auth_users.dtos.LoginResponse;
 import com.Nexora.NexoraFinance.auth_users.dtos.UpdatePasswordRequest;
 import com.Nexora.NexoraFinance.auth_users.dtos.UserDTO;
 import com.Nexora.NexoraFinance.auth_users.entity.User;
