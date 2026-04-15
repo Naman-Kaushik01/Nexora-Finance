@@ -41,7 +41,7 @@ public class AuditorController {
 
     }
 
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('AUDITOR')")
+
     @GetMapping("/accounts")
     public ResponseEntity<AccountDTO> findAccountDetailsByAccountNumber(@RequestParam String accountNumber) {
         Optional<AccountDTO> accountDTO = auditorService.findAccountDetailsByAccountNumber(accountNumber);
